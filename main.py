@@ -6,6 +6,7 @@
 # Headlines are cap 18, section headers cap 24, masthead cap 40.
 import os
 import sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from draw import (Canvas, PAPER, INK, RED, NAVY, SKY, SEA, GREY, GOLD,
                   ORANGE, draw_text, text_w, text_block, encode_png)
