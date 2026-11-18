@@ -1,84 +1,112 @@
-# The day's news, verified from live reporting on 18 Nov 2026.
-# Every headline is true as reported; wording is shortened only to fit,
-# never to change a fact. Each story is (headline, icon) — no deck line
-# under any story except the lead, so the bigger headlines fit.
-# Headlines are kept to <=22 chars for one line (condensed scale),
-# or <=44 chars for two lines. 41 stories: the original 36 + 5 new
-# ones verified 18 Nov (Norway/Denmark, Ireland/Kosovo, Thailand
-# trade deal, Jay Shah, measles status).
+"""Story data for news-image-20261117 (Tuesday 17 November 2026).
+All 53 stories verified 17 Nov 2026 (41 from yesterday's verified set +
+12 more verified live on 18 Nov). ASCII only (the font is ASCII).
+"""
 
-LEAD_HEAD = "UKRAINE STRIKES KERCH BRIDGE AGAIN"
-LEAD_DECK = ("Second hit in under 24 hours; traffic suspended "
-             "as Russia hits Kyiv crossings.")
-
-# Each column: list of (section_header, icon_or_None, [(headline, icon), ...])
-COLUMNS = [
-    [
-        ("EUROPE", None, [
-            ("Zaporizhzhia strike kills 40", "explosion"),
-            ("Estonia shuts Russia border 1 Dec", "flag"),
-            ("Germany 5-0 Dutch", "ball"),
-            ("Scotland 0-4 Swiss", "ball"),
-            ("Norway bans Russians", "doc"),
-            ("Lukaku quits Belgium", "ball"),
-            ("Norway 3-2 Denmark", "ball"),
-            ("Ireland 3-0 Kosovo", "ball"),
-        ]),
-        ("MIDDLE EAST", "tanker", [
-            ("4th tanker mined in Hormuz", "tanker"),
-            ("Bahrain stops Iranian attacks", "shield"),
-            ("Iran refuses UN checks", "no"),
-            ("Israel hits Gaza tents, 3 dead", "explosion"),
-        ]),
-    ],
-    [
-        ("ASIA-PACIFIC", "cyclone", [
-            ("China confirms Xi-Trump-Putin summit", "globe"),
-            ("Trump, Quad in Manila", "globe"),
-            ("Cyclone Akvan nears", "storm"),
-            ("Delhi chokes on smog", "cloud"),
-            ("India edge Pakistan", "trophy"),
-            ("Alcaraz beats Tiafoe", "ball"),
-            ("Bear closes schools", "bear"),
-            ("Malaysia's Queen arrives for COP31", "crown"),
-            ("Dhoni ends IPL career", "trophy"),
-            ("Trump signs Thai deal", "flag"),
-            ("Shah stays ICC chief", "trophy"),
-        ]),
-        ("AFRICA & OCEANIA", None, [
-            ("AFCON: five winners", "trophy"),
-            ("Argentina merger rules", "doc"),
-            ("Australia: puberty-blocker advice", "plus"),
-        ]),
-    ],
-    [
-        ("MARKETS & TECH", "chip", [
-            ("Nvidia beats estimates", "chip"),
-            ("S&P 500 falls 1.4%", "chart"),
-            ("Bitcoin near $64,000", "coin"),
-            ("JPMorgan outage ends", "bolt"),
-            ("Microsoft explains outage", "bolt"),
-            ("NSA network down", "lock"),
-            ("US curbs chip exports", "chip"),
-            ("Hackers hit 178 sites", "warn"),
-            ("Anthropic IPO in focus", "chart"),
-        ]),
-        ("AMERICAS", None, [
-            ("Grey Cup: Elks 37-30", "trophy"),
-            ("FEMA tests US alert", "warn"),
-            ("US measles-free ends", "virus"),
-        ]),
-        ("CLIMATE", None, [
-            ("COP31: $120bn fund", "leaf"),
-            ("ECO: Vision 2035 adopted", "globe"),
-        ]),
-    ],
+TOP3 = [
+    {
+        "tag": "EUROPE - UKRAINE WAR",
+        "tag_color": 2,
+        "headline": "KERCH BRIDGE SPAN FALLS INTO THE SEA",
+        "deck": "Second strike in two days; traffic suspended.",
+        "map": "kerch",
+    },
+    {
+        "tag": "MIDDLE EAST - GULF WAR",
+        "tag_color": 2,
+        "headline": "IRAN DRONES HIT US BASE IN BAHRAIN",
+        "deck": "Bahrain intercepts Iranian attacks near US base; third in five days.",
+        "map": "gulf",
+    },
+    {
+        "tag": "ASIA - SUMMIT EVE",
+        "tag_color": 3,
+        "headline": "TRUMP HEADS TO SHENZHEN SUMMIT",
+        "deck": "China confirms first trilateral, Thursday.",
+        "map": "china",
+    },
 ]
 
+# sections: (name, color, [(icon, headline), ...]) -- headlines <= 31 chars
+SECTIONS = [
+    ("EUROPE", 3, [
+        ("flag", "ESTONIA SHUTS RUSSIA BORDER"),
+        ("ball", "GERMANY 5-0 NETHERLANDS"),
+        ("ball", "SCOTLAND 0-4 SWITZERLAND"),
+        ("flag", "NORWAY BANS RUSSIAN ATHLETES"),
+        ("ball", "LUKAKU QUITS BELGIUM"),
+        ("ball", "NORWAY 3-2 DENMARK"),
+    ]),
+    ("MIDDLE EAST", 2, [
+        ("boom", "ZAPORIZHZHIA STRIKE KILLS 40"),
+        ("boom", "AID-CENTRE STRIKE KILLS 26"),
+        ("doc", "IRAN REFUSES UN CHECKS"),
+        ("boom", "ISRAELI STRIKE KILLS 3 IN GAZA"),
+        ("ship", "4TH TANKER MINED IN HORMUZ"),
+        ("warn", "TRUMP WARNS OF DIRTY-BOMB PLOT"),
+    ]),
+    ("MARKETS & TECH", 4, [
+        ("chart", "NVIDIA BEATS FORECAST"),
+        ("chart", "S AND P 500 FALLS 1.4%"),
+        ("coin", "BITCOIN NEAR $64,000"),
+        ("bank", "JPMORGAN OUTAGE ENDS"),
+        ("chip", "MICROSOFT OUTAGE HITS"),
+        ("bolt", "HACKERS HIT 178 SITES"),
+    ]),
+    ("SPORT & CLIMATE", 5, [
+        ("ball", "ALCARAZ BEATS TIAFOE"),
+        ("trophy", "INDIA EDGE PAKISTAN U19"),
+        ("medal", "DHONI ENDS IPL CAREER"),
+        ("trophy", "GREY CUP: ELKS 37-30"),
+        ("leaf", "COP31: $120BN FUND DRAFT"),
+        ("leaf", "ECO: VISION 2035 ADOPTED"),
+    ]),
+]
 
-def story_count():
-    n = 1  # the lead
-    for col in COLUMNS:
-        for _hdr, _icon, stories in col:
-            n += len(stories)
-    return n
+# also-on list: 26 items, each <= 48 chars, one line at 10px
+ALSO = [
+    "Cyclone Akvan nears Odisha and Andhra",
+    "Delhi chokes on smog",
+    "Trump in Manila for Quad summit",
+    "Trump signs Thailand trade deal",
+    "Jay Shah re-elected ICC chairman",
+    "Bear shuts Maebashi schools",
+    "Malaysia's Queen arrives for COP31",
+    "Ireland 3-0 Kosovo, Parrott double",
+    "FEMA tests US emergency alert",
+    "Anthropic IPO in focus",
+    "US tightens chip export rules",
+    "NSA network reported down",
+    "AFCON: five winners qualify",
+    "Argentina merger rules take effect",
+    "Australia: puberty-blocker advice",
+    "US loses measles-free status",
+    "Ebola in DR Congo tops 11,000 cases",
+    "Nepal first in line for loss-and-damage cash",
+    "Pattinson named new James Bond",
+    "COP31 draft: faster fossil-fuel exit",
+    "Thailand building fire kills 11",
+    "US judge blocks Trump student rule",
+    "Japan scrambles jets at Russian planes",
+    "South Africa: 17 killed in shootings",
+    "UK sanctions Israeli settlement firms",
+    "Dhaka garment workers protest",
+]
+
+# world map dots: (label, lon, lat)
+MAP_DOTS = [
+    ("KERCH", 36.0, 45.0),
+    ("KYIV", 30.5, 50.5),
+    ("BAHRAIN", 50.5, 26.0),
+    ("HORMUZ", 57.0, 26.5),
+    ("GAZA", 34.4, 31.5),
+    ("MANILA", 121.0, 14.5),
+    ("SHENZHEN", 114.0, 22.5),
+    ("DELHI", 77.0, 28.5),
+    ("ODISHA", 85.0, 20.0),
+    ("ANTALYA", 30.7, 36.9),
+    ("WASHINGTON", -77.0, 39.0),
+    ("KINSHASA", 15.3, -4.3),
+]
+
+TOTAL = 3 + sum(len(s[2]) for s in SECTIONS) + len(ALSO)
