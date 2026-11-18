@@ -1,0 +1,178 @@
+# THE WORLD IN ONE DAY — Tuesday, 17 November 2026.
+# Draws the front page with pure-stdlib code and writes /output/entry.png.
+import os
+import sys
+
+from draw import (Canvas, PAPER, INK, RED, NAVY, SKY, SEA, GREY, GOLD,
+                  ORANGE, draw_text, text_w, text_block, wrap, char_w,
+                  encode_png)
+from stories import LEAD_HEAD, LEAD_DECK, COLUMNS, story_count
+
+W = 1024
+H = 1024
+MARGIN = 28
+COL_W = 310
+COL_X = [28, 358, 688]
+BODY_TOP = 324
+BODY_BOTTOM = 984
+
+
+def draw_globe(cv, cx, cy, r):
+    cv.circle(cx, cy, r, NAVY, fill=False)
+    cv.hline(cx - r, cy, 2 * r, NAVY)
+    cv.vline(cx, cy - r, 2 * r, NAVY)
+    cv.line(cx - r + 6, cy - r + 8, cx + r - 6, cy + r - 8, NAVY)
+    cv.line(cx + r - 6, cy - r + 8, cx - r + 6, cy + r - 8, NAVY)
+
+
+def draw_bridge_scene(cv, x, y, w, h):
+    cv.rect(x, y, w, h, SKY)
+    sea_y = y + int(h * 0.68)
+    cv.rect(x, sea_y, w, h - int(h * 0.68), SEA)
+    deck_y = y + int(h * 0.52)
+    # explosion plume above the bridge centre
+    mx = x + w // 2
+    cv.circle(mx - 18, deck_y - 26, 14, ORANGE)
+    cv.circle(mx + 6, deck_y - 34, 17, RED)
+    cv.circle(mx + 26, deck_y - 22, 11, ORANGE)
+    cv.circle(mx - 2, deck_y - 48, 12, GREY)
+    cv.circle(mx + 18, deck_y - 52, 9, GREY)
+    # towers and deck
+    cv.rect(x + 60, deck_y - 58, 10, 58, INK)
+    cv.rect(x + w - 70, deck_y - 58, 10, 58, INK)
+    cv.rect(x, deck_y, w, 8, INK)
+    cv.line(x + 65, deck_y - 58, mx, deck_y, INK)
+    cv.line(x + w - 65, deck_y - 58, mx, deck_y, INK)
+    cv.line(x + 65, deck_y - 58, x + 10, deck_y, INK)
+    cv.line(x + w - 65, deck_y - 58, x + w - 10, deck_y, INK)
+    # two ships on the water
+    cv.poly([(x + 30, sea_y + 22), (x + 90, sea_y + 22),
+             (x + 80, sea_y + 34), (x + 40, sea_y + 34)], INK)
+    cv.vline(x + 60, sea_y + 6, 16, INK)
+    cv.poly([(x + w - 110, sea_y + 30), (x + w - 40, sea_y + 30),
+             (x + w - 50, sea_y + 42), (x + w - 100, sea_y + 42)], INK)
+    cv.vline(x + w - 75, sea_y + 14, 16, INK)
+
+
+def draw_tanker(cv, x, y, s):
+    # s = icon size in px (about 30)
+    cv.poly([(x, y + s - 8), (x + s, y + s - 8),
+             (x + s - 6, y + s), (x + 6, y + s)], INK)
+    cv.rect(x + 4, y + s - 20, 12, 12, RED)
+    cv.rect(x + 18, y + s - 16, 8, 8, NAVY)
+    cv.circle(x + s - 8, y + 4, 4, ORANGE)
+    cv.circle(x + s - 4, y + 8, 3, RED)
+
+
+def draw_cyclone(cv, x, y, r):
+    for k, rr in enumerate((r, r - 4, r - 8)):
+        cv.circle(x + k * 2, y + k, rr, NAVY, fill=False)
+    cv.circle(x, y, 3, RED)
+
+
+def draw_chip(cv, x, y, s):
+    cv.rect(x + 5, y + 5, s - 10, s - 10, INK)
+    cv.rect(x + 9, y + 9, s - 18, s - 18, GOLD)
+    for i in range(3):
+        d = 9 + i * 8
+        cv.rect(x + d, y, 3, 5, INK)
+        cv.rect(x + d, y + s - 5, 3, 5, INK)
+        cv.rect(x, y + d, 5, 3, INK)
+        cv.rect(x + s - 5, y + d, 5, 3, INK)
+
+
+ICONS = {'tanker': draw_tanker, 'cyclone': draw_cyclone, 'chip': draw_chip}
+
+
+def masthead(cv):
+    draw_globe(cv, 56, 62, 26)
+    title = "THE WORLD IN ONE DAY"
+    tw = text_w(title, 6)
+    draw_text(cv, (W - tw) // 2, 28, title, 6, INK, bold=True)
+    cv.hline(MARGIN, 82, W - 2 * MARGIN, RED, thick=4)
+    date = "TUESDAY, 17 NOVEMBER 2026"
+    dw = text_w(date, 4)
+    draw_text(cv, (W - dw) // 2, 94, date, 4, INK, bold=True)
+    strap = "36 STORIES · SIX CONTINENTS · ONE DAY"
+    sw = text_w(strap, 2)
+    draw_text(cv, (W - sw) // 2, 130, strap, 2, NAVY, bold=True)
+    cv.hline(MARGIN, 150, W - 2 * MARGIN, INK, thick=2)
+
+
+def lead(cv):
+    draw_text(cv, MARGIN, 164, "LEAD STORY", 2, RED, bold=True)
+    y = 188
+    y += text_block(cv, MARGIN, y, LEAD_HEAD, 620, 4, INK, bold=True,
+                    pitch=31)
+    y += 6
+    text_block(cv, MARGIN, y, LEAD_DECK, 620, 2, INK, pitch=17)
+    draw_bridge_scene(cv, 668, 164, 328, 140)
+    cv.hline(MARGIN, 314, W - 2 * MARGIN, INK, thick=2)
+
+
+def section_header(cv, x, y, title, icon):
+    draw_text(cv, x, y, title, 3, NAVY, bold=True)
+    if icon and icon in ICONS:
+        fn = ICONS[icon]
+        if icon == 'cyclone':
+            fn(cv, x + COL_W - 16, y + 10, 11)
+        else:
+            fn(cv, x + COL_W - 30, y - 2, 30)
+    cv.hline(x, y + 27, COL_W, NAVY, thick=2)
+    return 36
+
+
+def story(cv, x, y, headline, deck):
+    y0 = y
+    y += text_block(cv, x, y, headline, COL_W, 2, INK, bold=True, pitch=16)
+    if deck:
+        y += 1
+        y += text_block(cv, x, y, deck, COL_W, 2, INK, pitch=16)
+    return y + 6 - y0
+
+
+def columns(cv):
+    heights = []
+    for ci, sections in enumerate(COLUMNS):
+        x = COL_X[ci]
+        y = BODY_TOP
+        for title, icon, stories in sections:
+            y += section_header(cv, x, y, title, icon)
+            for headline, deck in stories:
+                y += story(cv, x, y, headline, deck)
+        heights.append(y - BODY_TOP)
+        if y > BODY_BOTTOM:
+            print("OVERFLOW col %d by %d px" % (ci, y - BODY_BOTTOM),
+                  file=sys.stderr)
+    return heights
+
+
+def footer(cv):
+    cv.hline(MARGIN, 990, W - 2 * MARGIN, INK, thick=2)
+    line = "As reported on 17 November 2026"
+    lw = text_w(line, 2)
+    draw_text(cv, (W - lw) // 2, 998, line, 2, GREY)
+
+
+def build():
+    cv = Canvas(W, H)
+    masthead(cv)
+    lead(cv)
+    heights = columns(cv)
+    footer(cv)
+    return cv, heights
+
+
+def main():
+    cv, heights = build()
+    print("stories:", story_count(), "| column heights:", heights)
+    outdir = os.environ.get("MAKEFUN_OUTPUT_DIR") or "/output"
+    os.makedirs(outdir, exist_ok=True)
+    path = os.path.join(outdir, "entry.png")
+    with open(path, "wb") as f:
+        f.write(encode_png(cv))
+    print("wrote", path)
+
+
+if __name__ == "__main__":
+    main()
