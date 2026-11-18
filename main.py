@@ -1,20 +1,27 @@
 # THE WORLD IN ONE DAY — Tuesday, 17 November 2026.
 # Draws the front page with pure-stdlib code and writes /output/entry.png.
+# v2: 41 stories, big condensed headlines (scale 3 tall) with one drawn
+# pictogram per story, no deck lines except the lead.
 import os
 import sys
 
 from draw import (Canvas, PAPER, INK, RED, NAVY, SKY, SEA, GREY, GOLD,
                   ORANGE, draw_text, text_w, text_block, wrap, char_w,
                   encode_png)
+from icons import draw_icon
 from stories import LEAD_HEAD, LEAD_DECK, COLUMNS, story_count
 
 W = 1024
 H = 1024
-MARGIN = 28
-COL_W = 310
-COL_X = [28, 358, 688]
-BODY_TOP = 324
-BODY_BOTTOM = 984
+MARGIN = 24
+COL_W = 304
+COL_X = [24, 360, 696]
+BODY_TOP = 312
+BODY_BOTTOM = 986
+ICON = 24
+ICON_GAP = 6
+TEXT_X = ICON + ICON_GAP  # 30
+STORY_GAP = 11
 
 
 def draw_globe(cv, cx, cy, r):
@@ -93,7 +100,7 @@ def masthead(cv):
     date = "TUESDAY, 17 NOVEMBER 2026"
     dw = text_w(date, 4)
     draw_text(cv, (W - dw) // 2, 94, date, 4, INK, bold=True)
-    strap = "36 STORIES · SIX CONTINENTS · ONE DAY"
+    strap = "41 STORIES · SIX CONTINENTS · ONE DAY"
     sw = text_w(strap, 2)
     draw_text(cv, (W - sw) // 2, 130, strap, 2, NAVY, bold=True)
     cv.hline(MARGIN, 150, W - 2 * MARGIN, INK, thick=2)
@@ -106,29 +113,27 @@ def lead(cv):
                     pitch=31)
     y += 6
     text_block(cv, MARGIN, y, LEAD_DECK, 620, 2, INK, pitch=17)
-    draw_bridge_scene(cv, 668, 164, 328, 140)
-    cv.hline(MARGIN, 314, W - 2 * MARGIN, INK, thick=2)
+    draw_bridge_scene(cv, 668, 164, 328, 128)
+    cv.hline(MARGIN, 300, W - 2 * MARGIN, INK, thick=2)
 
 
 def section_header(cv, x, y, title, icon):
-    draw_text(cv, x, y, title, 3, NAVY, bold=True)
+    draw_text(cv, x, y, title, (2, 4), NAVY, bold=True)
     if icon and icon in ICONS:
         fn = ICONS[icon]
         if icon == 'cyclone':
             fn(cv, x + COL_W - 16, y + 10, 11)
         else:
             fn(cv, x + COL_W - 30, y - 2, 30)
-    cv.hline(x, y + 27, COL_W, NAVY, thick=2)
-    return 36
+    cv.hline(x, y + 30, COL_W, NAVY, thick=2)
+    return 38
 
 
-def story(cv, x, y, headline, deck):
-    y0 = y
-    y += text_block(cv, x, y, headline, COL_W, 2, INK, bold=True, pitch=16)
-    if deck:
-        y += 1
-        y += text_block(cv, x, y, deck, COL_W, 2, INK, pitch=16)
-    return y + 6 - y0
+def story(cv, x, y, headline, icon):
+    draw_icon(cv, x, y, icon)
+    h = text_block(cv, x + TEXT_X, y, headline, COL_W - TEXT_X, (2, 3),
+                   INK, bold=True, pitch=24)
+    return max(ICON, h) + STORY_GAP
 
 
 def columns(cv):
@@ -138,8 +143,8 @@ def columns(cv):
         y = BODY_TOP
         for title, icon, stories in sections:
             y += section_header(cv, x, y, title, icon)
-            for headline, deck in stories:
-                y += story(cv, x, y, headline, deck)
+            for headline, icon in stories:
+                y += story(cv, x, y, headline, icon)
         heights.append(y - BODY_TOP)
         if y > BODY_BOTTOM:
             print("OVERFLOW col %d by %d px" % (ci, y - BODY_BOTTOM),

@@ -90,8 +90,16 @@ class Canvas:
                     self.px(x, y, color)
 
 
+def _scales(scale):
+    """A scale is an int (square) or an (sx, sy) tuple (condensed)."""
+    if isinstance(scale, tuple):
+        return scale
+    return (scale, scale)
+
+
 def char_w(scale):
-    return 6 * scale
+    sx, _sy = _scales(scale)
+    return 6 * sx
 
 
 def text_w(text, scale):
@@ -101,8 +109,9 @@ def text_w(text, scale):
 def draw_text(cv, x, y, text, scale, color, bold=False):
     """Draw one line at (x, y) top-left. Returns width drawn."""
     text = normalize(text)
+    sx, sy = _scales(scale)
     cx = x
-    off = max(1, scale // 2) if bold else 0
+    off = max(1, sx // 2) if bold else 0
     for ch in text:
         glyph = FONT.get(ch)
         if glyph is None:
@@ -112,12 +121,12 @@ def draw_text(cv, x, y, text, scale, color, bold=False):
             bits = glyph[row]
             for col in range(5):
                 if bits & (1 << (4 - col)):
-                    for dy in range(scale):
-                        for dx in range(scale):
-                            cv.px(cx + col * scale + dx, y + row * scale + dy, color)
+                    for dy in range(sy):
+                        for dx in range(sx):
+                            cv.px(cx + col * sx + dx, y + row * sy + dy, color)
                             if bold:
-                                cv.px(cx + col * scale + dx + off,
-                                      y + row * scale + dy, color)
+                                cv.px(cx + col * sx + dx + off,
+                                      y + row * sy + dy, color)
         cx += char_w(scale)
     return cx - x
 
@@ -142,8 +151,9 @@ def wrap(text, max_chars):
 
 def text_block(cv, x, y, text, max_w, scale, color, bold=False, pitch=None):
     """Wrapped text block. Returns the height used in px."""
+    _sx, sy = _scales(scale)
     if pitch is None:
-        pitch = 7 * scale + 3
+        pitch = 7 * sy + 3
     max_chars = max(1, max_w // char_w(scale))
     lines = wrap(text, max_chars)
     yy = y
