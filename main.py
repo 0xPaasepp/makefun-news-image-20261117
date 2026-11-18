@@ -583,12 +583,12 @@ def _masthead():
     draw_text(M, 14, "THE WORLD'S NEWS IN ONE PICTURE", BOLD, 13, RED)
     draw_text(1000, 14, "45 STORIES · 6 CONTINENTS · ALL FROM TUESDAY",
               BOLD, 13, NAVY, align="right")
-    draw_text(M, 32, "TUESDAY 17 NOVEMBER 2026", SERIFB, 54, INK)
+    draw_text(M, 32, "TUESDAY 17 NOVEMBER 2026", SERIFB, 54, INK, stroke=1)
     hline(M, 1000, 100, 3, INK)
     draw_text(512, 108,
               "Kerch Bridge falls into the sea  ·  Gulf strikes spread  ·  "
               "Trump flies to Shenzhen summit",
-              REG, 14, INK, align="center", stroke=1)
+              REG, 14, INK, align="center")
 
 
 def _leads():
@@ -613,16 +613,16 @@ def _leads():
                   lead["headline"])
         y = 258.0
         for line in lines[:2]:
-            draw_text(x + 6, y, line, SERIFB, 25, INK)
+            draw_text(x + 6, y, line, SERIFB, 25, INK, stroke=1)
             y += 28
-        # deck
+        # deck (regular weight — headlines carry the weight)
         dlines = wrap_text(lead["deck"], REG, 13, w - 12)
         if len(dlines) > 2:
             print("WARN lead deck wraps to", len(dlines), "lines:",
                   lead["deck"])
         y = 318.0
         for line in dlines[:2]:
-            draw_text(x + 6, y, line, REG, 13, INK, stroke=1)
+            draw_text(x + 6, y, line, REG, 13, INK)
             y += 17
 
 
@@ -635,7 +635,8 @@ def _stats():
         rect(x, 360, x + 1, 410, LINEC)
         rect(x + w - 1, 360, x + w, 410, LINEC)
         rect(x, 409, x + w, 410, LINEC)
-        draw_text(x + w / 2, 368, num, SERIFB, 28, RED, align="center")
+        draw_text(x + w / 2, 368, num, SERIFB, 28, RED, align="center",
+                  stroke=1)
         draw_text(x + w / 2, 396, label, BOLD, 9.5, INK, align="center")
 
 
@@ -660,7 +661,7 @@ def _tiles():
                   tile["headline"])
         yy = y + 21
         for line in lines[:2]:
-            draw_text(x + 12, yy, line, BOLD, 15, INK)
+            draw_text(x + 12, yy, line, BOLD, 15, INK, stroke=1)
             yy += 18
         dlines = wrap_text(tile["deck"], REG, 11.5, w - 20)
         if len(dlines) > 2:
@@ -668,7 +669,7 @@ def _tiles():
                   tile["deck"])
         yy = y + 59
         for line in dlines[:2]:
-            draw_text(x + 12, yy, line, REG, 11.5, INK, stroke=1)
+            draw_text(x + 12, yy, line, REG, 11.5, INK)
             yy += 14
 
 
@@ -710,7 +711,7 @@ def _bottom():
         if text_width(item, REG, 11.5) > 176:
             print("WARN ALSO item too wide:", item)
         disc(x + 4, y + 5.5, 2.4, RED)
-        draw_text(x + 12, y, item, REG, 11.5, INK, stroke=1)
+        draw_text(x + 12, y, item, REG, 11.5, INK)
 
 
 def _footer():
@@ -718,11 +719,11 @@ def _footer():
     draw_text(512, 984,
               "Every story happened or was first reported on "
               "Tuesday 17 November 2026.",
-              REG, 11, INK, align="center", stroke=1)
+              REG, 11, INK, align="center")
     draw_text(512, 999,
               "Sources: Reuters, AP, AFP, BBC, Al Jazeera, WHO, UN  ·  "
               "Original drawings",
-              REG, 11, GREY, align="center", stroke=1)
+              REG, 11, GREY, align="center")
 
 
 # --- PNG output ---
