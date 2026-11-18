@@ -11,7 +11,7 @@ LEADS = [
         "labels": [("RUSSIA", 36.6, 47.2, "ink"), ("CRIMEA", 34.4, 45.0, "ink"),
                    ("KERCH STRAIT", 38.4, 46.7, "navy"),
                    ("BLACK SEA", 36.2, 44.3, "navy")],
-        "marks": [("burst", 36.55, 45.35), ("bridge", 36.55, 45.35)],
+        "marks": [("bridge", 36.55, 45.35)],
         "headline": "KERCH BRIDGE SPAN FALLS",
         "deck": "Second strike in two days; a span drops into the sea and road traffic is suspended.",
     },
@@ -125,17 +125,20 @@ ALSO = [
 
 # World-map pins: (number, name, lon, lat, dlon, dlat) — dlon/dlat nudge the
 # drawn pin (in degrees) so close pins do not overlap; the key names them.
+# Nudges were laid out so every pair of drawn pins is >= ~21 map units
+# apart (disc radius 8); _bottom() draws a short leader from the true
+# spot (small dot) to the offset numbered pin.
 PINS = [
     (1, "KERCH", 36.5, 45.3, 0.0, 0.0),
-    (2, "KYIV", 30.5, 50.4, -1.5, 1.5),
-    (3, "BAHRAIN", 50.5, 26.2, 1.5, 1.2),
-    (4, "HORMUZ", 56.3, 26.6, 1.5, -1.2),
-    (5, "GAZA", 34.5, 31.5, -1.5, -1.5),
-    (6, "MANILA", 121.0, 14.6, 0.0, 0.0),
-    (7, "SHENZHEN", 114.1, 22.5, 0.0, 0.0),
-    (8, "DELHI", 77.2, 28.6, 0.0, 0.0),
-    (9, "ODISHA", 85.8, 20.3, 0.0, 0.0),
-    (10, "ANTALYA", 30.7, 36.9, -2.0, -1.5),
+    (2, "KYIV", 30.5, 50.4, -4.0, 5.0),
+    (3, "BAHRAIN", 50.5, 26.2, 1.0, 9.0),
+    (4, "HORMUZ", 56.3, 26.6, 6.5, -8.0),
+    (5, "GAZA", 34.5, 31.5, 6.0, -9.0),
+    (6, "MANILA", 121.0, 14.6, 1.0, -7.0),
+    (7, "SHENZHEN", 114.1, 22.5, 3.0, 8.0),
+    (8, "DELHI", 77.2, 28.6, -2.0, 9.0),
+    (9, "ODISHA", 85.8, 20.3, 1.0, -7.0),
+    (10, "ANTALYA", 30.7, 36.9, -8.0, -6.0),
     (11, "WASHINGTON", -77.0, 38.9, 0.0, 0.0),
     (12, "KINSHASA", 15.3, -4.3, 0.0, 0.0),
 ]

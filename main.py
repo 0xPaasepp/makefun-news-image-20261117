@@ -228,12 +228,15 @@ def _flatten_contour(pts, scale):
 _GLYPH_CACHE = {}
 
 
-def _raster_glyph(face, ch, size_px):
+def _raster_glyph(face, ch, size_px, stroke=0):
     """Rasterize one glyph at buffer-pixel em size `size_px`.
     Returns (sparse, w, h, xoff, yoff, adv_px) where sparse is a list of
     (dx, dy, alpha) with alpha 0..255, and (xoff, yoff) is the bitmap
-    top-left relative to the pen position (baseline)."""
-    key = (face is SERIF, ch, size_px)
+    top-left relative to the pen position (baseline).
+    stroke=1 dilates the bitmap by 1 buffer px (0.5 output px per side),
+    a faux-bold that keeps advance widths identical, so wrapping is
+    untouched while regular-weight text reads as strong printed type."""
+    key = (face is SERIF, ch, size_px, stroke)
     hit = _GLYPH_CACHE.get(key)
     if hit is not None:
         return hit
@@ -268,12 +271,25 @@ def _raster_glyph(face, ch, size_px):
         bmp[o:o + xb - xa + 1] = b"\xff" * (xb - xa + 1)
 
     _fill_spans(shifted, (0, 0, w, h), set_span)
+    xoff = int(math.floor(minx))
+    yoff = int(math.floor(miny))
+    if stroke:
+        nw, nh = w + 2, h + 2
+        nb = bytearray(nw * nh)
+        for i, a in enumerate(bmp):
+            if a:
+                bx0, by0 = i % w, i // w
+                for ddy in (-1, 0, 1):
+                    for ddx in (-1, 0, 1):
+                        nb[(by0 + 1 + ddy) * nw + bx0 + 1 + ddx] = 0xFF
+        bmp, w, h = nb, nw, nh
+        xoff -= 1
+        yoff -= 1
     sparse = []
     for i, a in enumerate(bmp):
         if a:
             sparse.append((i % w, i // w, a))
-    res = (sparse, w, h, int(math.floor(minx)), int(math.floor(miny)),
-           int(round(adv * scale)))
+    res = (sparse, w, h, xoff, yoff, int(round(adv * scale)))
     _GLYPH_CACHE[key] = res
     return res
 
@@ -308,9 +324,10 @@ def text_width(text, face, size):
     return tot * size / upm
 
 
-def draw_text(x, y, text, face, size, color, align="left"):
+def draw_text(x, y, text, face, size, color, align="left", stroke=0):
     """Draw text; (x, y) is the top-left of the cap-height box (1024 units).
-    align: left / center / right relative to x."""
+    align: left / center / right relative to x.
+    stroke=1 renders every glyph one buffer px thicker (faux-bold)."""
     if not text:
         return
     w = text_width(text, face, size)
@@ -323,7 +340,8 @@ def draw_text(x, y, text, face, size, color, align="left"):
     baseline = (y + size * face["cap"] / upm) * S
     pen = x * S
     for ch in text:
-        sparse, gw, gh, xoff, yoff, adv = _raster_glyph(face, ch, size_px)
+        sparse, gw, gh, xoff, yoff, adv = _raster_glyph(face, ch, size_px,
+                                                       stroke)
         if sparse:
             _blit_glyph(sparse, int(round(pen)) + xoff,
                         int(round(baseline)) + yoff, color)
@@ -413,12 +431,36 @@ def draw_map(box, bbox, labels=(), marks=(), grat_step=5):
             disc(mx, my, 4, RED)
             ring(mx, my, 4, 1.4, WHITE, RED)
         elif kind == "bridge":
-            for (a, b) in [((35.95, 45.45), (36.32, 45.38)),
-                           ((36.85, 45.30), (37.05, 45.26)),
-                           ((36.42, 45.36), (36.72, 45.16))]:
+            # Kerch Bridge, struck for a second day: the two decks end in
+            # a wide empty gap, a span plunges steeply into the sea, a
+            # burst and smoke mark the break, spray shows where it hits.
+            for (a, b) in [((35.88, 45.48), (36.26, 45.41)),
+                           ((36.92, 45.32), (37.12, 45.26))]:
                 p0 = _proj(a[0], a[1], bbox, box)
                 p1 = _proj(b[0], b[1], bbox, box)
-                thick_line(p0[0], p0[1], p1[0], p1[1], 2.6, INK)
+                thick_line(p0[0], p0[1], p1[0], p1[1], 3.4, INK)
+            # fallen span, plunging into the sea
+            p0 = _proj(36.30, 45.40, bbox, box)
+            p1 = _proj(36.62, 44.99, bbox, box)
+            thick_line(p0[0], p0[1], p1[0], p1[1], 3.6, INK)
+            # submerged tip
+            p0 = _proj(36.62, 44.99, bbox, box)
+            p1 = _proj(36.78, 44.95, bbox, box)
+            thick_line(p0[0], p0[1], p1[0], p1[1], 2.4, INK)
+            # burst at the break
+            bx, by = _proj(36.58, 45.38, bbox, box)
+            star(bx, by, 12, RED)
+            disc(bx, by, 3.2, GOLD)
+            # smoke puffs above the gap
+            for sx, sy, sr in ((36.42, 45.58, 4.5), (36.62, 45.62, 3.5),
+                               (36.55, 45.52, 3.0)):
+                px, py = _proj(sx, sy, bbox, box)
+                disc(px, py, sr, GREY)
+            # splash where the span hits the water
+            sx, sy = _proj(36.80, 44.96, bbox, box)
+            star(sx, sy, 5, WHITE)
+            disc(sx + 6, sy + 2, 1.8, WHITE)
+            disc(sx - 6, sy + 3, 1.5, WHITE)
         elif kind == "flags":
             fx, fy = _proj(mark[1], mark[2], bbox, box)
             _flags(fx, fy - 9)
@@ -546,7 +588,7 @@ def _masthead():
     draw_text(512, 108,
               "Kerch Bridge falls into the sea  ·  Gulf strikes spread  ·  "
               "Trump flies to Shenzhen summit",
-              REG, 14, INK, align="center")
+              REG, 14, INK, align="center", stroke=1)
 
 
 def _leads():
@@ -580,7 +622,7 @@ def _leads():
                   lead["deck"])
         y = 318.0
         for line in dlines[:2]:
-            draw_text(x + 6, y, line, REG, 13, INK)
+            draw_text(x + 6, y, line, REG, 13, INK, stroke=1)
             y += 17
 
 
@@ -626,7 +668,7 @@ def _tiles():
                   tile["deck"])
         yy = y + 59
         for line in dlines[:2]:
-            draw_text(x + 12, yy, line, REG, 11.5, INK)
+            draw_text(x + 12, yy, line, REG, 11.5, INK, stroke=1)
             yy += 14
 
 
@@ -640,8 +682,13 @@ def _bottom():
     rect(24, 722, 25.2, 930, INK)
     rect(594.8, 722, 596, 930, INK)
     for num, _name, lo, la, dlo, dla in PINS:
+        tx, ty = _proj(lo, la, (-170, -58, 190, 84), (24, 722, 596, 930))
         px, py = _proj(lo + dlo, la + dla, (-170, -58, 190, 84),
                        (24, 722, 596, 930))
+        if dlo or dla:
+            # short leader from the true spot (small dot) to the offset pin
+            thick_line(tx, ty, px, py, 1.2, RED)
+            disc(tx, ty, 3, RED)
         disc(px, py, 8, RED)
         ring(px, py, 8, 1.4, WHITE, RED)
         draw_text(px, py - 5.5, str(num), BOLD, 10, WHITE, align="center")
@@ -663,7 +710,7 @@ def _bottom():
         if text_width(item, REG, 11.5) > 176:
             print("WARN ALSO item too wide:", item)
         disc(x + 4, y + 5.5, 2.4, RED)
-        draw_text(x + 12, y, item, REG, 11.5, INK)
+        draw_text(x + 12, y, item, REG, 11.5, INK, stroke=1)
 
 
 def _footer():
@@ -671,11 +718,11 @@ def _footer():
     draw_text(512, 984,
               "Every story happened or was first reported on "
               "Tuesday 17 November 2026.",
-              REG, 11, INK, align="center")
+              REG, 11, INK, align="center", stroke=1)
     draw_text(512, 999,
               "Sources: Reuters, AP, AFP, BBC, Al Jazeera, WHO, UN  ·  "
               "Original drawings",
-              REG, 11, GREY, align="center")
+              REG, 11, GREY, align="center", stroke=1)
 
 
 # --- PNG output ---
