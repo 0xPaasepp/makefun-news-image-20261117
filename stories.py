@@ -70,7 +70,7 @@ COLUMNS = [
         ]),
         ("CLIMATE", None, [
             ("COP31: $120bn fund", "leaf"),
-            ("ECO adopts Vision 2035", "globe"),
+            ("ECO: Vision 2035 adopted", "globe"),
         ]),
     ],
 ]

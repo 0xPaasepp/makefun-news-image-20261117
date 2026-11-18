@@ -2,12 +2,13 @@
 # Draws the front page with pure-stdlib code and writes /output/entry.png.
 # v2: 41 stories, big condensed headlines (scale 3 tall) with one drawn
 # pictogram per story, no deck lines except the lead.
+# v3: stroke font (clean printed type) replaces the 5x7 pixel font.
+# Headlines are cap 18, section headers cap 24, masthead cap 40.
 import os
 import sys
 
 from draw import (Canvas, PAPER, INK, RED, NAVY, SKY, SEA, GREY, GOLD,
-                  ORANGE, draw_text, text_w, text_block, wrap, char_w,
-                  encode_png)
+                  ORANGE, draw_text, text_w, text_block, encode_png)
 from icons import draw_icon
 from stories import LEAD_HEAD, LEAD_DECK, COLUMNS, story_count
 
@@ -21,7 +22,7 @@ BODY_BOTTOM = 986
 ICON = 24
 ICON_GAP = 6
 TEXT_X = ICON + ICON_GAP  # 30
-STORY_GAP = 11
+STORY_GAP = 7
 
 
 def draw_globe(cv, cx, cy, r):
@@ -92,33 +93,34 @@ ICONS = {'tanker': draw_tanker, 'cyclone': draw_cyclone, 'chip': draw_chip}
 
 
 def masthead(cv):
-    draw_globe(cv, 56, 62, 26)
+    draw_globe(cv, 56, 48, 26)
     title = "THE WORLD IN ONE DAY"
-    tw = text_w(title, 6)
-    draw_text(cv, (W - tw) // 2, 28, title, 6, INK, bold=True)
-    cv.hline(MARGIN, 82, W - 2 * MARGIN, RED, thick=4)
+    tw = text_w(title, 40)
+    draw_text(cv, (W - tw) // 2, 24, title, 40, INK, thick=3)
+    cv.hline(MARGIN, 80, W - 2 * MARGIN, RED, thick=4)
     date = "TUESDAY, 17 NOVEMBER 2026"
-    dw = text_w(date, 4)
-    draw_text(cv, (W - dw) // 2, 94, date, 4, INK, bold=True)
+    dw = text_w(date, 28)
+    draw_text(cv, (W - dw) // 2, 92, date, 28, INK, thick=3)
     strap = "41 STORIES · SIX CONTINENTS · ONE DAY"
-    sw = text_w(strap, 2)
-    draw_text(cv, (W - sw) // 2, 130, strap, 2, NAVY, bold=True)
-    cv.hline(MARGIN, 150, W - 2 * MARGIN, INK, thick=2)
+    sw = text_w(strap, 14)
+    draw_text(cv, (W - sw) // 2, 130, strap, 14, NAVY, thick=2)
+    cv.hline(MARGIN, 152, W - 2 * MARGIN, INK, thick=2)
 
 
 def lead(cv):
-    draw_text(cv, MARGIN, 164, "LEAD STORY", 2, RED, bold=True)
-    y = 188
-    y += text_block(cv, MARGIN, y, LEAD_HEAD, 620, 4, INK, bold=True,
-                    pitch=31)
-    y += 6
-    text_block(cv, MARGIN, y, LEAD_DECK, 620, 2, INK, pitch=17)
+    draw_text(cv, MARGIN, 162, "LEAD STORY", 14, RED, thick=2)
+    y = 184
+    y += text_block(cv, MARGIN, y, LEAD_HEAD, 540, 28, INK, thick=3,
+                    pitch=40)
+    y += 4
+    y += text_block(cv, MARGIN, y, LEAD_DECK, 620, 14, INK, thick=2,
+                    pitch=20)
     draw_bridge_scene(cv, 668, 164, 328, 128)
-    cv.hline(MARGIN, 300, W - 2 * MARGIN, INK, thick=2)
+    return y
 
 
 def section_header(cv, x, y, title, icon):
-    draw_text(cv, x, y, title, (2, 4), NAVY, bold=True)
+    draw_text(cv, x, y, title, 24, NAVY, thick=3)
     if icon and icon in ICONS:
         fn = ICONS[icon]
         if icon == 'cyclone':
@@ -126,26 +128,26 @@ def section_header(cv, x, y, title, icon):
         else:
             fn(cv, x + COL_W - 30, y - 2, 30)
     cv.hline(x, y + 30, COL_W, NAVY, thick=2)
-    return 38
+    return 34
 
 
 def story(cv, x, y, headline, icon):
     draw_icon(cv, x, y, icon)
-    h = text_block(cv, x + TEXT_X, y, headline, COL_W - TEXT_X, (2, 3),
-                   INK, bold=True, pitch=24)
+    h = text_block(cv, x + TEXT_X, y, headline, COL_W - TEXT_X, 19,
+                   INK, thick=2, pitch=28)
     return max(ICON, h) + STORY_GAP
 
 
-def columns(cv):
+def columns(cv, top):
     heights = []
     for ci, sections in enumerate(COLUMNS):
         x = COL_X[ci]
-        y = BODY_TOP
+        y = top
         for title, icon, stories in sections:
             y += section_header(cv, x, y, title, icon)
             for headline, icon in stories:
                 y += story(cv, x, y, headline, icon)
-        heights.append(y - BODY_TOP)
+        heights.append(y - top)
         if y > BODY_BOTTOM:
             print("OVERFLOW col %d by %d px" % (ci, y - BODY_BOTTOM),
                   file=sys.stderr)
@@ -155,15 +157,16 @@ def columns(cv):
 def footer(cv):
     cv.hline(MARGIN, 990, W - 2 * MARGIN, INK, thick=2)
     line = "As reported on 17 November 2026"
-    lw = text_w(line, 2)
-    draw_text(cv, (W - lw) // 2, 998, line, 2, GREY)
+    lw = text_w(line, 14)
+    draw_text(cv, (W - lw) // 2, 998, line, 14, GREY, thick=2)
 
 
 def build():
     cv = Canvas(W, H)
     masthead(cv)
-    lead(cv)
-    heights = columns(cv)
+    end = lead(cv)
+    cv.hline(MARGIN, end + 8, W - 2 * MARGIN, INK, thick=2)
+    heights = columns(cv, end + 20)
     footer(cv)
     return cv, heights
 

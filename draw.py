@@ -90,57 +90,51 @@ class Canvas:
                     self.px(x, y, color)
 
 
-def _scales(scale):
-    """A scale is an int (square) or an (sx, sy) tuple (condensed)."""
-    if isinstance(scale, tuple):
-        return scale
-    return (scale, scale)
+# Stroke-font text. size = cap height in px; the em box is 14 grid
+# units tall, so scale = size / 10. (x, y) is the top-left of the em box.
+
+def _s(size):
+    return size / 10.0
 
 
-def char_w(scale):
-    sx, _sy = _scales(scale)
-    return 6 * sx
+def text_w(text, size):
+    s = _s(size)
+    w = 0.0
+    for ch in normalize(text):
+        g = FONT.get(ch)
+        w += (g[0] if g else 5) * s
+    return int(round(w))
 
 
-def text_w(text, scale):
-    return len(normalize(text)) * char_w(scale)
-
-
-def draw_text(cv, x, y, text, scale, color, bold=False):
-    """Draw one line at (x, y) top-left. Returns width drawn."""
-    text = normalize(text)
-    sx, sy = _scales(scale)
-    cx = x
-    off = max(1, sx // 2) if bold else 0
-    for ch in text:
-        glyph = FONT.get(ch)
-        if glyph is None:
-            cx += char_w(scale)
+def draw_text(cv, x, y, text, size, color, thick=2):
+    """Draw one line. Returns width drawn."""
+    s = _s(size)
+    cx = float(x)
+    for ch in normalize(text):
+        g = FONT.get(ch)
+        if g is None:
+            cx += 5 * s
             continue
-        for row in range(7):
-            bits = glyph[row]
-            for col in range(5):
-                if bits & (1 << (4 - col)):
-                    for dy in range(sy):
-                        for dx in range(sx):
-                            cv.px(cx + col * sx + dx, y + row * sy + dy, color)
-                            if bold:
-                                cv.px(cx + col * sx + dx + off,
-                                      y + row * sy + dy, color)
-        cx += char_w(scale)
-    return cx - x
+        adv, strokes = g
+        for stroke in strokes:
+            pts = [(int(round(cx + px * s)), int(round(y + py * s)))
+                   for px, py in stroke]
+            if len(pts) == 1:
+                cv.rect(pts[0][0], pts[0][1], thick, thick, color)
+            for a, b in zip(pts, pts[1:]):
+                cv.line(a[0], a[1], b[0], b[1], color, thick=thick)
+        cx += adv * s
+    return int(round(cx)) - x
 
 
-def wrap(text, max_chars):
-    """Greedy word wrap. Returns a list of lines, each <= max_chars."""
+def wrap(text, max_w, size):
+    """Greedy word wrap by pixel width. Returns lines."""
     words = normalize(text).split(' ')
-    lines = []
-    cur = ''
+    lines, cur = [], ''
     for w in words:
-        if not cur:
-            cur = w
-        elif len(cur) + 1 + len(w) <= max_chars:
-            cur += ' ' + w
+        cand = w if not cur else cur + ' ' + w
+        if text_w(cand, size) <= max_w or not cur:
+            cur = cand
         else:
             lines.append(cur)
             cur = w
@@ -149,16 +143,14 @@ def wrap(text, max_chars):
     return lines
 
 
-def text_block(cv, x, y, text, max_w, scale, color, bold=False, pitch=None):
+def text_block(cv, x, y, text, max_w, size, color, thick=2, pitch=None):
     """Wrapped text block. Returns the height used in px."""
-    _sx, sy = _scales(scale)
     if pitch is None:
-        pitch = 7 * sy + 3
-    max_chars = max(1, max_w // char_w(scale))
-    lines = wrap(text, max_chars)
+        pitch = int(round(14 * _s(size))) + 3
+    lines = wrap(text, max_w, size)
     yy = y
     for ln in lines:
-        draw_text(cv, x, yy, ln, scale, color, bold=bold)
+        draw_text(cv, x, yy, ln, size, color, thick=thick)
         yy += pitch
     return yy - y
 
